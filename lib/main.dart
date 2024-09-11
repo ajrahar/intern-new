@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:Kodegiri/admin_screens/splash_screen.dart';
+import 'package:Kodegiri/universal_screen/splash_screen.dart';
 
 void main() {
   runApp(WebLauncherApp());
