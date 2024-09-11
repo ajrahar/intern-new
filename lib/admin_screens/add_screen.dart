@@ -121,7 +121,8 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
         }
       });
       String uniqueId = generateUniqueId();
-      _saveTitleToSharedPreferences(uniqueId, _titleController.text, _linkController.text);
+      _saveTitleToSharedPreferences(
+          uniqueId, _titleController.text, _linkController.text);
 
       _titleController.clear();
       _linkController.clear();
@@ -172,7 +173,7 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
     await prefs.setString('title_$id', title);
     await prefs.setString('link_$id', link);
   }
-  
+
   String generateUniqueId() {
     const String chars =
         'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -184,5 +185,4 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
 
     return id;
   }
-
 }

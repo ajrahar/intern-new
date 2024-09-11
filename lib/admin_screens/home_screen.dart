@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'add_screen.dart';
+import 'add_screen.dart'; // Ensure you have this file and it is properly set up
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -34,28 +34,177 @@ class _HomeScreenState extends State<HomeScreen> {
   Future<void> loadLinksFromSharedPreferences() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
 
-    // Ambil semua kunci dari SharedPreferences
+    // Get all keys from SharedPreferences
     Set<String> keys = prefs.getKeys();
 
     List<Map<String, String>> loadedLinks = [];
+    List<Map<String, String>> loadedArchivedLinks = [];
 
-    // Loop melalui kunci untuk menemukan key yang cocok (title_ dan link_)
+    // Loop through keys to find matching key (title_, link_, archived_)
     for (String key in keys) {
       if (key.startsWith('title_')) {
-        String id = key.replaceFirst('title_', ''); // Ambil ID dari key
+        String id = key.replaceFirst('title_', ''); // Extract ID from key
         String? title = prefs.getString('title_$id');
         String? link = prefs.getString('link_$id');
+        bool? isArchived = prefs.getBool('archived_$id') ?? false;
 
         if (title != null && link != null) {
-          loadedLinks.add({'title': title, 'link': link});
-          print('Key: $key, Title: $title, Link: $link');
+          if (isArchived) {
+            loadedArchivedLinks.add({'title': title, 'link': link});
+          } else {
+            loadedLinks.add({'title': title, 'link': link});
+          }
         }
       }
     }
 
     setState(() {
-      _links = loadedLinks; // Memuat data ke dalam list _links
-      _filterLinks(); // Filter links berdasarkan pencarian
+      _links = loadedLinks;
+      _archivedLinks = loadedArchivedLinks;
+      _filterLinks();
+    });
+  }
+
+  Future<void> _saveLinksToSharedPreferences() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    // Remove all previous data
+    Set<String> keys = prefs.getKeys();
+    for (String key in keys) {
+      if (key.startsWith('title_')) {
+        String id = key.replaceFirst('title_', '');
+        prefs.remove('title_$id');
+        prefs.remove('link_$id');
+        prefs.remove('archived_$id');
+      }
+    }
+
+    // Save the current links
+    for (int i = 0; i < _links.length; i++) {
+      String id = _getIdFromLink(_links[i]['link']!);
+      prefs.setString('title_$id', _links[i]['title']!);
+      prefs.setString('link_$id', _links[i]['link']!);
+      prefs.setBool('archived_$id', false);
+    }
+
+    for (int i = 0; i < _archivedLinks.length; i++) {
+      String id = _getIdFromLink(_archivedLinks[i]['link']!);
+      prefs.setString('title_$id', _archivedLinks[i]['title']!);
+      prefs.setString('link_$id', _archivedLinks[i]['link']!);
+      prefs.setBool('archived_$id', true);
+    }
+  }
+
+  void _archiveLink(int index) async {
+    // Get the actual index of the link in the _links list based on the filtered list
+    Map<String, String> linkToArchive =
+        _filteredLinks[index]; // Get the link data from the filtered list
+    int originalIndex = _links.indexWhere((link) =>
+        link['link'] == linkToArchive['link']); // Find the index in _links
+
+    if (originalIndex < 0 || originalIndex >= _links.length) return;
+
+    String id = _getIdFromLink(_links[originalIndex]['link']!);
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('archived_$id', true);
+
+    setState(() {
+      // Move the link to the archived list and remove from the main list
+      _archivedLinks.add(_links[originalIndex]);
+      _links.removeAt(originalIndex);
+      _filterLinks(); // Refresh the filtered list
+    });
+
+    await _saveLinksToSharedPreferences();
+
+    _showFeedback('Link archived successfully');
+  }
+
+  void _unarchiveLink(int index) async {
+    // Get the actual index of the link in the _archivedLinks list based on the filtered list
+    Map<String, String> linkToUnarchive =
+        _filteredLinks[index]; // Get the link data from the filtered list
+    int originalIndex = _archivedLinks.indexWhere((link) =>
+        link['link'] ==
+        linkToUnarchive['link']); // Find the index in _archivedLinks
+
+    if (originalIndex < 0 || originalIndex >= _archivedLinks.length) return;
+
+    String id = _getIdFromLink(_archivedLinks[originalIndex]['link']!);
+
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('archived_$id', false);
+
+    setState(() {
+      // Move the link to the main list and remove from the archived list
+      _links.add(_archivedLinks[originalIndex]);
+      _archivedLinks.removeAt(originalIndex);
+      _filterLinks(); // Refresh the filtered list
+    });
+
+    await _saveLinksToSharedPreferences();
+  }
+
+  Future<void> _confirmAndDeleteLink(int index) async {
+    bool? confirm = await showDialog<bool>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirm Deletion'),
+          content: const Text('Are you sure you want to delete this link?'),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(false),
+              child: const Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(true),
+              child: const Text('Delete'),
+            ),
+          ],
+        );
+      },
+    );
+
+    if (confirm == true) {
+      // Use a correct index based on whether viewing archived or not
+      if (_viewArchived) {
+        _deleteLink(index, isArchived: true);
+      } else {
+        _deleteLink(index, isArchived: false);
+      }
+    }
+  }
+
+  void _deleteLink(int index, {required bool isArchived}) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+
+    if (index < 0 ||
+        index >= (_viewArchived ? _archivedLinks.length : _links.length)) {
+      // Index is out of bounds, handle the error
+      print('Invalid index $index');
+      return;
+    }
+
+    // Determine the ID and remove from the appropriate list
+    String id;
+    if (isArchived) {
+      id = _getIdFromLink(_archivedLinks[index]['link']!);
+      _archivedLinks.removeAt(index);
+    } else {
+      id = _getIdFromLink(_links[index]['link']!);
+      _links.removeAt(index);
+    }
+
+    // Remove the link from SharedPreferences
+    prefs.remove('title_$id');
+    prefs.remove('link_$id');
+    prefs.remove('archived_$id');
+
+    setState(() {
+      _filterLinks();
+      _saveLinksToSharedPreferences();
     });
   }
 
@@ -85,81 +234,8 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  void _editLink(int index) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => EditScreen(
-          linkData: _filteredLinks[index],
-          onSave: (updatedData) {
-            setState(() {
-              if (_viewArchived) {
-                _archivedLinks[index] = updatedData;
-              } else {
-                _links[index] = updatedData;
-              }
-              _filterLinks();
-            });
-          },
-        ),
-      ),
-    );
-  }
-
-  void _deleteLink(int index) {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Delete Link'),
-          content: const Text('Are you sure you want to delete this link?'),
-          actions: [
-            TextButton(
-              onPressed: () {
-                setState(() {
-                  if (_viewArchived) {
-                    _archivedLinks.removeAt(index);
-                  } else {
-                    _links.removeAt(index);
-                  }
-                  _filterLinks();
-                });
-                Navigator.of(context).pop();
-              },
-              child: const Text('Delete'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Cancel'),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  void _archiveLink(int index) {
-    setState(() {
-      _archivedLinks.add(_links[index]);
-      _links.removeAt(index);
-      _filterLinks();
-    });
-  }
-
-  void _unarchiveLink(int index) {
-    setState(() {
-      _links.add(_archivedLinks[index]);
-      _archivedLinks.removeAt(index);
-      _filterLinks();
-    });
-  }
-
   Future<void> _launchLink(String url) async {
     Uri uri;
-
-    print('Attempting to launch URL: $url');
 
     if (!url.startsWith('http://') && !url.startsWith('https://')) {
       uri = Uri.parse('https://$url');
@@ -167,16 +243,10 @@ class _HomeScreenState extends State<HomeScreen> {
       uri = Uri.parse(url);
     }
 
-    print('Final URI: $uri');
-
-    try {
-      if (await canLaunchUrl(uri)) {
-        await launchUrl(uri);
-      } else {
-        throw 'Could not launch $uri. The URL may be invalid or the scheme might not be supported.';
-      }
-    } catch (e) {
-      print('Error: $e');
+    if (await canLaunchUrl(uri)) {
+      await launchUrl(uri);
+    } else {
+      throw 'Could not launch $uri';
     }
   }
 
@@ -230,8 +300,8 @@ class _HomeScreenState extends State<HomeScreen> {
                         () => _archiveLink(index)),
                   _buildIconButton(
                       Icons.edit, Colors.blue, () => _editLink(index)),
-                  _buildIconButton(
-                      Icons.delete, Colors.red, () => _deleteLink(index)),
+                  _buildIconButton(Icons.delete, Colors.red,
+                      () => _confirmAndDeleteLink(index)),
                 ],
               ),
             ],
@@ -246,9 +316,9 @@ class _HomeScreenState extends State<HomeScreen> {
       padding: const EdgeInsets.only(left: 8),
       child: InkWell(
         onTap: onPressed,
-        customBorder: CircleBorder(),
+        customBorder: const CircleBorder(),
         child: Padding(
-          padding: EdgeInsets.all(4),
+          padding: const EdgeInsets.all(4),
           child: Icon(icon, color: color, size: 27),
         ),
       ),
@@ -262,10 +332,9 @@ class _HomeScreenState extends State<HomeScreen> {
       appBar: AppBar(
         title: Text(
           _viewArchived ? 'Archived Links' : 'Link Manager',
-          style: const TextStyle(color: Colors.white), // White text color
+          style: const TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1F2937),
-        iconTheme: const IconThemeData(color: Colors.white), // White icon color
         actions: [
           IconButton(
             icon: Icon(_viewArchived ? Icons.view_list : Icons.archive),
@@ -291,7 +360,6 @@ class _HomeScreenState extends State<HomeScreen> {
             padding: const EdgeInsets.all(16.0),
             child: Column(
               children: [
-                // Search Bar
                 TextField(
                   controller: _searchController,
                   decoration: InputDecoration(
@@ -316,6 +384,10 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     itemCount: _filteredLinks.length,
                     itemBuilder: (context, index) {
+                      if (index >= _filteredLinks.length) {
+                        // Handle invalid index scenario
+                        return Container(); // Return an empty widget or handle as needed
+                      }
                       return _buildCard(_filteredLinks[index], index);
                     },
                   ),
@@ -347,6 +419,47 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  String _getIdFromLink(String link) {
+    return link;
+  }
+
+  void _showFeedback(String message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text(message),
+        duration: const Duration(seconds: 2),
+      ),
+    );
+  }
+
+  void _editLink(int index) {
+    if (index < 0 || index >= _filteredLinks.length) {
+      // Index is out of bounds, handle the error
+      print('Invalid index $index');
+      return;
+    }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => EditScreen(
+          linkData: _filteredLinks[index],
+          onSave: (updatedData) {
+            setState(() {
+              if (_viewArchived) {
+                _archivedLinks[index] = updatedData;
+              } else {
+                _links[index] = updatedData;
+              }
+              _filterLinks();
+              _saveLinksToSharedPreferences();
+            });
+          },
+        ),
       ),
     );
   }
