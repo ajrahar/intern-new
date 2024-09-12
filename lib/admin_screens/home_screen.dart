@@ -1,3 +1,4 @@
+import 'package:Kodegiri/admin_screens/edit_profile_screen.dart';
 import 'package:Kodegiri/admin_screens/manage_sales_screen.dart';
 import 'package:Kodegiri/universal_screen/login_screen.dart';
 import 'package:flutter/material.dart';
@@ -435,25 +436,26 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 CircleAvatar(
                   radius: 30,
                   backgroundImage: AssetImage(
-                      'assets/images/profile.png'), // Add your admin profile image
+                    'assets/images/profile.png', // Add your admin profile image
+                  ),
                 ),
-                SizedBox(height: 16),
+                const SizedBox(height: 16),
                 Text(
-                  'Admin Profile',
-                  style: TextStyle(
+                  'Admin Name', // Update with current admin name
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
-                  'admin@example.com',
-                  style: TextStyle(
+                  'admin@example.com', // Update with current admin email
+                  style: const TextStyle(
                     color: Colors.white70,
                     fontSize: 14,
                   ),
@@ -468,6 +470,17 @@ class _HomeScreenState extends State<HomeScreen> {
               Navigator.pushReplacement(
                 context,
                 MaterialPageRoute(builder: (context) => SalesAccountScreen()),
+              );
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.edit, color: Colors.black),
+            title: const Text('Edit Profile'),
+            onTap: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => EditProfileScreen()),
               );
             },
           ),
