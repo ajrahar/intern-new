@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class EditProfileScreen extends StatefulWidget {
   @override
@@ -12,17 +13,29 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   @override
   void initState() {
     super.initState();
-    // Initialize with current profile data (if any)
-    _nameController.text = 'Admin Name'; // Replace with current admin name
-    _emailController.text =
-        'admin@example.com'; // Replace with current admin email
+    _loadProfile();
+  }
+
+  Future<void> _loadProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      _nameController.text = prefs.getString('admin_name') ?? 'Admin Name';
+      _emailController.text =
+          prefs.getString('admin_email') ?? 'admin@example.com';
+    });
+  }
+
+  Future<void> _saveProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setString('admin_name', _nameController.text);
+    await prefs.setString('admin_email', _emailController.text);
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Edit Profile'),
+        title: Text('Edit Profile'),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -30,20 +43,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: [
             TextField(
               controller: _nameController,
-              decoration: const InputDecoration(labelText: 'Name'),
+              decoration: InputDecoration(labelText: 'Name'),
             ),
             TextField(
               controller: _emailController,
-              decoration: const InputDecoration(labelText: 'Email'),
+              decoration: InputDecoration(labelText: 'Email'),
             ),
-            const SizedBox(height: 20),
+            SizedBox(height: 20),
             ElevatedButton(
-              onPressed: () {
-                // Save the updated profile data
-                // You might want to save it to SharedPreferences or a backend
-                Navigator.of(context).pop();
+              onPressed: () async {
+                await _saveProfile();
+                Navigator.of(context).pop(true); // Notify change
               },
-              child: const Text('Save'),
+              child: Text('Save'),
             ),
           ],
         ),

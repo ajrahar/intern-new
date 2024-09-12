@@ -21,11 +21,15 @@ class _HomeScreenState extends State<HomeScreen> {
   TextEditingController _searchController = TextEditingController();
   bool _viewArchived = false;
 
+  String adminName = 'Admin Name';
+  String adminEmail = 'admin@example.com';
+
   @override
   void initState() {
     super.initState();
     _searchController.addListener(_filterLinks);
     loadLinksFromSharedPreferences();
+    _loadProfile();
   }
 
   @override
@@ -33,6 +37,14 @@ class _HomeScreenState extends State<HomeScreen> {
     _searchController.removeListener(_filterLinks);
     _searchController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadProfile() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    setState(() {
+      adminName = prefs.getString('admin_name') ?? 'Admin Name';
+      adminEmail = prefs.getString('admin_email') ?? 'admin@example.com';
+    });
   }
 
   Future<void> loadLinksFromSharedPreferences() async {
