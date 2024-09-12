@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:Kodegiri/universal_screen/splash_screen.dart';
+import 'admin_screens/home_screen.dart';
+import 'universal_screen/login_screen.dart';
 
 void main() {
-  runApp(WebLauncherApp());
+  runApp(MyApp());
 }
 
-class WebLauncherApp extends StatelessWidget {
-  const WebLauncherApp({super.key});
-
+class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'Kodegiri',
+      title: 'Kodegiri App',
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      home: const SplashScreen(),
+      home: LoginScreen(),
+      routes: {
+        '/home': (context) => HomeScreen(),
+        '/login': (context) => LoginScreen(),
+        // Add other routes here
+      },
     );
   }
 }

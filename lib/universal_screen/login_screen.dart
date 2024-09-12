@@ -1,5 +1,7 @@
+import 'package:Kodegiri/user_screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:Kodegiri/admin_screens/home_screen.dart'; // Ensure you have this file and it is properly set up
+import 'package:Kodegiri/user_screens/uhome_screen.dart'; // Ensure you have this file and it is properly set up
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -18,11 +20,25 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   void _login() {
-    // Navigate to HomeScreen directly
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(builder: (context) => HomeScreen()),
-    );
+    final username = _usernameController.text;
+
+    // Determine which screen to navigate to based on the username
+    if (username == 'admin') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => HomeScreen()),
+      );
+    } else if (username == 'sales') {
+      Navigator.pushReplacement(
+        context,
+        MaterialPageRoute(builder: (context) => SalesScreen()),
+      );
+    } else {
+      // Show an error message or handle unknown usernames
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Invalid username')),
+      );
+    }
   }
 
   @override

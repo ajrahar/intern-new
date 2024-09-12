@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class SalesScreen extends StatefulWidget {
+  const SalesScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<SalesScreen> createState() => _SalesScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _SalesScreenState extends State<SalesScreen> {
   List<Map<String, String>> _links = []; // Ini hanya untuk menampilkan tampilan
   List<Map<String, String>> _filteredLinks =
       []; // Ini hanya untuk menampilkan tampilan
