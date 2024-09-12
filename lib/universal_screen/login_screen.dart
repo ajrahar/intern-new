@@ -1,4 +1,3 @@
-import 'package:Kodegiri/user_screens/uhome_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:Kodegiri/admin_screens/home_screen.dart'; // Ensure you have this file and it is properly set up
 import 'package:Kodegiri/user_screens/uhome_screen.dart'; // Ensure you have this file and it is properly set up
@@ -22,7 +21,6 @@ class _LoginScreenState extends State<LoginScreen> {
   void _login() {
     final username = _usernameController.text;
 
-    // Determine which screen to navigate to based on the username
     if (username == 'admin') {
       Navigator.pushReplacement(
         context,
@@ -34,7 +32,6 @@ class _LoginScreenState extends State<LoginScreen> {
         MaterialPageRoute(builder: (context) => SalesScreen()),
       );
     } else {
-      // Show an error message or handle unknown usernames
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('Invalid username')),
       );
@@ -44,56 +41,86 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(
-        title: Text('Login',
-            style: TextStyle(color: Colors.white)), // Title color set to white
-        backgroundColor: Color(0xFF1F2937), // Background color of AppBar
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
+      body: Container(
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Colors.indigo[800]!, Colors.blueGrey[900]!],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+        ),
         child: Center(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Image.asset('assets/images/kodegiri.png',
-                  height: 100), // Display image
-              SizedBox(height: 20),
-              TextField(
-                controller: _usernameController,
-                decoration: InputDecoration(
-                  labelText: 'Username',
-                  border: OutlineInputBorder(),
-                ),
-              ),
-              SizedBox(height: 16),
-              TextField(
-                controller: _passwordController,
-                obscureText: _obscurePassword,
-                decoration: InputDecoration(
-                  labelText: 'Password',
-                  border: OutlineInputBorder(),
-                  suffixIcon: IconButton(
-                    icon: Icon(
-                      _obscurePassword
-                          ? Icons.visibility
-                          : Icons.visibility_off,
-                    ),
-                    onPressed: _togglePasswordVisibility,
+          child: Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Image.asset('assets/images/kodegiri.png', height: 100),
+                SizedBox(height: 20),
+                Container(
+                  padding: EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.8),
+                    borderRadius: BorderRadius.circular(16),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.2),
+                        blurRadius: 8,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      TextField(
+                        controller: _usernameController,
+                        decoration: InputDecoration(
+                          labelText: 'Username',
+                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(
+                              color: const Color.fromARGB(255, 35, 61, 105)),
+                        ),
+                      ),
+                      SizedBox(height: 16),
+                      TextField(
+                        controller: _passwordController,
+                        obscureText: _obscurePassword,
+                        decoration: InputDecoration(
+                          labelText: 'Password',
+                          border: OutlineInputBorder(),
+                          labelStyle: TextStyle(
+                              color: const Color.fromARGB(255, 23, 37, 61)),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              _obscurePassword
+                                  ? Icons.visibility
+                                  : Icons.visibility_off,
+                            ),
+                            onPressed: _togglePasswordVisibility,
+                            color: const Color.fromARGB(255, 25, 47, 84),
+                          ),
+                        ),
+                      ),
+                      SizedBox(height: 20),
+                      ElevatedButton(
+                        onPressed: _login,
+                        child: Text('Login'),
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              const Color.fromARGB(255, 29, 44, 69),
+                          foregroundColor: Colors.white,
+                          padding: EdgeInsets.symmetric(
+                              horizontal: 50, vertical: 15),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(30),
+                          ),
+                        ),
+                      ),
+                    ],
                   ),
                 ),
-              ),
-              SizedBox(height: 20),
-              ElevatedButton(
-                onPressed: _login,
-                child: Text('Login'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor:
-                      Color(0xFF1F2937), // Background color of the button
-                  foregroundColor: Colors.white, // Text color of the button
-                  padding: EdgeInsets.symmetric(horizontal: 50, vertical: 15),
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
