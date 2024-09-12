@@ -1,9 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import the provider package
+import 'universal_screen/link_provider.dart'; // Correct import path for LinkProvider
 import 'admin_screens/home_screen.dart';
 import 'universal_screen/login_screen.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => LinkProvider(),
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
