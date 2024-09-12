@@ -1,31 +1,32 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart'; // Import the provider package
 import 'package:url_launcher/url_launcher.dart';
+import 'package:Kodegiri/universal_screen/link_provider.dart';
+// Import your LinkProvider
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class SalesScreen extends StatefulWidget {
+  const SalesScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<SalesScreen> createState() => _SalesScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
-  List<Map<String, String>> _links = []; // Ini hanya untuk menampilkan tampilan
-  List<Map<String, String>> _filteredLinks =
-      []; // Ini hanya untuk menampilkan tampilan
-
+class _SalesScreenState extends State<SalesScreen> {
   @override
   void initState() {
     super.initState();
-    // Simulasi data
-    _links = [
-      {'title': 'Google', 'link': 'https://www.google.com'},
-      {'title': 'Flutter', 'link': 'https://flutter.dev'},
-    ];
-    _filteredLinks = _links; // Memuat data yang sudah disederhanakan
+    // You can initialize or fetch data here if needed
+  }
+
+  void _logout() {
+    Navigator.pushReplacementNamed(context, '/login');
   }
 
   @override
   Widget build(BuildContext context) {
+    // Access the LinkProvider
+    final linkProvider = Provider.of<LinkProvider>(context);
+
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
       appBar: AppBar(
@@ -34,6 +35,13 @@ class _HomeScreenState extends State<HomeScreen> {
           style: TextStyle(color: Colors.white),
         ),
         backgroundColor: const Color(0xFF1F2937),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.logout),
+            onPressed: _logout,
+            tooltip: 'Log Out',
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -62,9 +70,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       mainAxisSpacing: 16.0,
                       childAspectRatio: 1.0,
                     ),
-                    itemCount: _filteredLinks.length,
+                    itemCount: linkProvider.links.length,
                     itemBuilder: (context, index) {
-                      return _buildCard(_filteredLinks[index]);
+                      return _buildCard(linkProvider.links[index]);
                     },
                   ),
                 ),
