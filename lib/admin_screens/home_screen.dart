@@ -1,6 +1,7 @@
+import 'package:Kodegiri/universal_screen/login_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
-import 'add_screen.dart'; // Ensure you have this file and it is properly set up
+import 'add_screen.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -342,6 +343,7 @@ class _HomeScreenState extends State<HomeScreen> {
           ),
         ],
       ),
+      drawer: _buildSidebar(), // Include the sidebar (Drawer)
       body: Stack(
         children: [
           Center(
@@ -384,10 +386,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                     itemCount: _filteredLinks.length,
                     itemBuilder: (context, index) {
-                      if (index >= _filteredLinks.length) {
-                        // Handle invalid index scenario
-                        return Container(); // Return an empty widget or handle as needed
-                      }
                       return _buildCard(_filteredLinks[index], index);
                     },
                   ),
@@ -417,6 +415,77 @@ class _HomeScreenState extends State<HomeScreen> {
               backgroundColor: Colors.white,
               child: const Icon(Icons.add, color: Colors.black),
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Sidebar (Drawer) implementation
+  Widget _buildSidebar() {
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: const BoxDecoration(
+              color: Color(0xFF1F2937),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: const [
+                CircleAvatar(
+                  radius: 30,
+                  backgroundImage: AssetImage(
+                      'assets/images/profile.png'), // Add your admin profile image
+                ),
+                SizedBox(height: 16),
+                Text(
+                  'Admin Profile',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                SizedBox(height: 4),
+                Text(
+                  'admin@example.com',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          ListTile(
+            leading: const Icon(Icons.person, color: Colors.black),
+            title: const Text('Manage User Accounts'),
+            onTap: () {
+              // Handle navigation to manage user accounts page
+            },
+          ),
+          ListTile(
+            leading: const Icon(Icons.group, color: Colors.black),
+            title: const Text('Manage Sales Accounts'),
+            onTap: () {
+              // Handle navigation to manage sales accounts page
+            },
+          ),
+          const Divider(),
+          ListTile(
+            leading: const Icon(Icons.logout, color: Colors.black),
+            title: const Text('Logout'),
+            onTap: () {
+              // Handle logout functionality
+              // Misalnya, hapus data sesi atau token
+              // Lalu arahkan ke halaman login
+              Navigator.pushReplacement(
+                context,
+                MaterialPageRoute(builder: (context) => LoginScreen()),
+              );
+            },
           ),
         ],
       ),
