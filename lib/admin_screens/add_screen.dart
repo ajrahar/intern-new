@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:math';
+import 'package:url_launcher/url_launcher.dart';
 
 class WebLauncherHomePage extends StatefulWidget {
   const WebLauncherHomePage({super.key});
@@ -11,10 +12,11 @@ class WebLauncherHomePage extends StatefulWidget {
 }
 
 class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
-  final List<Map<String, String>> _links = [];
+  final List<Map<String, dynamic>> _links = [];
   final _formKey = GlobalKey<FormState>();
   final TextEditingController _titleController = TextEditingController();
   final TextEditingController _linkController = TextEditingController();
+  Color _selectedColor = Colors.blue;
   int? _editingIndex;
 
   @override
@@ -66,6 +68,11 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
                   ),
                   const SizedBox(height: 20),
                   ElevatedButton(
+                    onPressed: _pickColor,
+                    child: const Text('Pick Card Color'),
+                  ),
+                  const SizedBox(height: 20),
+                  ElevatedButton(
                     onPressed: _saveLink,
                     child: Text(
                         _editingIndex == null ? 'Add Link' : 'Update Link'),
@@ -79,8 +86,8 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
                 itemCount: _links.length,
                 itemBuilder: (context, index) {
                   return ListTile(
-                    title: Text(_links[index]['title']!),
-                    subtitle: Text(_links[index]['link']!),
+                    title: Text(_links[index]['title']),
+                    subtitle: Text(_links[index]['link']),
                     trailing: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
@@ -94,7 +101,7 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
                         ),
                       ],
                     ),
-                    onTap: () => _launchLink(_links[index]['link']!),
+                    onTap: () => _launchLink(_links[index]['link']),
                   );
                 },
               ),
@@ -105,11 +112,44 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
     );
   }
 
+  void _pickColor() async {
+    Color pickedColor = await showDialog(
+      context: context,
+      builder: (context) {
+        Color tempColor = _selectedColor;
+        return AlertDialog(
+          title: const Text('Pick a color!'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: tempColor,
+              onColorChanged: (color) {
+                tempColor = color;
+              },
+            ),
+          ),
+          actions: <Widget>[
+            ElevatedButton(
+              child: const Text('Got it'),
+              onPressed: () {
+                Navigator.of(context).pop(tempColor);
+              },
+            ),
+          ],
+        );
+      },
+    );
+
+    setState(() {
+      _selectedColor = pickedColor;
+    });
+  }
+
   void _saveLink() {
     if (_formKey.currentState!.validate()) {
       final newLink = {
         'title': _titleController.text,
         'link': _linkController.text,
+        'color': _selectedColor.value,
       };
 
       setState(() {
@@ -122,10 +162,11 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
       });
       String uniqueId = generateUniqueId();
       _saveTitleToSharedPreferences(
-          uniqueId, _titleController.text, _linkController.text);
+          uniqueId, _titleController.text, _linkController.text, _selectedColor.value);
 
       _titleController.clear();
       _linkController.clear();
+      _selectedColor = Colors.blue;
 
       // Send the updated list back to HomeScreen
       Navigator.pop(context, _links);
@@ -134,8 +175,9 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
 
   void _editLink(int index) {
     setState(() {
-      _titleController.text = _links[index]['title']!;
-      _linkController.text = _links[index]['link']!;
+      _titleController.text = _links[index]['title'];
+      _linkController.text = _links[index]['link'];
+      _selectedColor = Color(_links[index]['color']);
       _editingIndex = index;
     });
   }
@@ -164,14 +206,16 @@ class _WebLauncherHomePageState extends State<WebLauncherHomePage> {
       _editingIndex = null;
       _titleController.clear();
       _linkController.clear();
+      _selectedColor = Colors.blue;
     });
   }
 
-  _saveTitleToSharedPreferences(String id, String title, String link) async {
+  _saveTitleToSharedPreferences(String id, String title, String link, int color) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
-    // Menyimpan title dan link dengan key unik
+    // Menyimpan title, link key unik
     await prefs.setString('title_$id', title);
     await prefs.setString('link_$id', link);
+    await prefs.setInt('color_$id', color);
   }
 
   String generateUniqueId() {
