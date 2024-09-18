@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:Kodegiri/admin_screens/home_screen.dart'; // Ensure you have this file and it is properly set up
-import 'package:Kodegiri/user_screens/uhome_screen.dart'; // Ensure you have this file and it is properly set up
+import 'package:Kodegiri/user_screens/uhome_screen.dart'; // Ensure you h 
+import 'package:rflutter_alert/rflutter_alert.dart';
+import 'package:jwt_decoder/jwt_decoder.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
 
 class LoginScreen extends StatefulWidget {
   @override
@@ -8,9 +12,43 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> {
+  List _datauser = [];
+
+  // Future<void> postDataUser() async {
+  //   try {
+  //     final response = await http.post(Uri.parse('http://localhost:3000/api/user/auth/login', ), body: {
+  //       'username': _usernameController.text,
+  //       'password': _passwordController.text,
+  //     });
+  //     if (response.statusCode == 200) {
+  //       final data = jsonDecode(response.body);
+  //       // print('Data users: $data');
+  //       setState(() {
+  //         _datauser = data;
+  //         // print('Data user berhasil diperbarui: $_datauser');
+  //       });
+  //     } else if (response.statusCode == 404) {
+  //       final message = jsonDecode(response.body)['message'];
+  //       print('Error: $message'); // Error: Tidak ada data user ditemukan
+  //     } else {
+  //       final message = jsonDecode(response.body)['message'];
+  //       print('Error: $message'); // Error: Data user gagal ditemukan
+  //     }
+  //   } catch (e) {
+  //     print('Cannot get data. Error : $e');
+  //   }
+  // }
+
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   bool _obscurePassword = true;
+
+  @override
+  void initState() {
+    // TODO: implement initState 
+    super.initState();
+    // _saveEmailToSharedPreferences(email.text);
+  }
 
   void _togglePasswordVisibility() {
     setState(() {
@@ -18,28 +56,74 @@ class _LoginScreenState extends State<LoginScreen> {
     });
   }
 
-  void _login() {
-    final username = _usernameController.text;
+  void _sweatAlert(BuildContext context, bool isAdmin) {
+    Alert(
+      context: context,
+      type: AlertType.success,
+      title: "Login berhasil",
+      desc: "Selamat anda berhasil login",
+      buttons: [
+        DialogButton(
+            child: Text(
+              "Selanjutnya",
+              style: TextStyle(color: Colors.white, fontSize: 14),
+            ),
+            onPressed: () {
+              Navigator.of(context).pop(); // Menutup dialog
+              // Optionally, you can navigate based on admin role
+              if (isAdmin) {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => HomeScreen()),
+                );
+              } else {
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => SalesScreen()),
+                );
+              }
+            })
+      ],
+    ).show();
+    return;
+  }
 
-    if (username == 'admin') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
-      );
-    } else if (username == 'sales') {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => SalesScreen()),
-      );
-    } else {
+  void _login() async {
+    final email = _usernameController.text;
+    final password = _passwordController.text;
+
+    try {
+      final response = await http.post(
+          Uri.parse(
+            'http://localhost:3000/api/user/auth/login',
+          ),
+          body: {'email': email, 'password': password});
+
+      var responseData = jsonDecode(response.body);
+
+      if (responseData['status'] == true) {
+        String token = responseData['token'];
+        Map<String, dynamic> decodedToken = JwtDecoder.decode(token);
+        bool isAdmin = decodedToken['isAdmin'] == true;
+
+        _sweatAlert(context, isAdmin);
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Login failed : ${responseData['message']}')),
+        );
+      }
+    } catch (e) {
+      print('Cannot get data. Error : $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Invalid username')),
+        SnackBar(content: Text('Cannot get data. Error : $e')),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    print('data user : \n');
+    print(_datauser);
     return Scaffold(
       body: Container(
         decoration: BoxDecoration(

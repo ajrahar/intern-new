@@ -4,7 +4,7 @@ import 'package:url_launcher/url_launcher.dart';
 import 'package:Kodegiri/universal_screen/link_provider.dart'; // Ensure the import path is correct
 import 'admin_screens/home_screen.dart';
 import 'universal_screen/login_screen.dart';
-import 'universal_screen/splash_screen.dart'; // Import the SplashScreen
+import 'universal_screen/splash_screen.dart'; // Import the SplashScreen 
 
 void main() {
   runApp(
